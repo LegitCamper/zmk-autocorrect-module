@@ -1,6 +1,4 @@
-name: auto_correct
 build:
   cmake: .
-  kconfig: Kconfig
   settings:
     module_ext_root: .
