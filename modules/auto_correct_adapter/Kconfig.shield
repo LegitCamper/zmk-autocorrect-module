@@ -1,0 +1,2 @@
+config SHIELD_AUTO_CORRECT_ADAPTER
+    def_bool $(shields_list_contains,auto_correct_adapter)

@@ -1,14 +1,10 @@
 config AUTO_CORRECT_WIDGET
-    bool "Enable RGB LED widget for showing battery and output status"
+    bool "Enable Auto Correct for ZMK"
 
 if AUTO_CORRECT_WIDGET
 
 config AUTO_CORRECT
     default y
-
-config AUTO_CORRECT_LANG
-    int "Language for auto complete dictionary"
-    default "English"
 
 endif
 
