@@ -1,4 +1,4 @@
 build:
-  cmake: .
+  cmake: modules/auto_correct/
   settings:
     module_ext_root: .
