@@ -36,9 +36,6 @@ int keycode_state_changed(const zmk_event_t *eh) {
 }
 
 struct TrieNode {
-    // The Trie Node Structure
-    // Each node has N children, starting from the root
-    // and a flag to check if it's a leaf node
     char data; // Storing for printing purposes only
     struct TrieNode* children[26];
     int is_leaf;
