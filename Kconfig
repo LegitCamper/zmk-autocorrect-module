@@ -1,10 +1,3 @@
-config AUTO_CORRECT_MODULE
+config AUTOCORRECT_WIDGET
     bool "Enable Auto Correct for ZMK"
-
-if AUTO_CORRECT_MODULE
-
-config AUTO_CORRECT
-    default y
-
-endif
 

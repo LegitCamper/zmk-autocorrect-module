@@ -1,1 +1,1 @@
-target_sources_ifdef(CONFIG_AUTO_CORRECT_MODULE app PRIVATE auto_correct.c)
+target_sources_ifdef(CONFIG_AUTOCORRECT_WIDGET app PRIVATE auto_correct.c)
