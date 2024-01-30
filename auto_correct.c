@@ -24,7 +24,7 @@ struct behavior_auto_correct_data *data = dev->correction_buffer ;
 
 // inits main struct
 static int auto_correct_init(const struct device *dev) {
-    correction_buffer;
+    // TODO: create log here to know the mod has started
     return 0;
 }
 
@@ -40,13 +40,13 @@ struct TrieNode {
     // Each node has N children, starting from the root
     // and a flag to check if it's a leaf node
     char data; // Storing for printing purposes only
-    TrieNode* children[26];
+    struct TrieNode* children[26];
     int is_leaf;
 };
 
-TrieNode* make_trienode(char data) {
+struct TrieNode* make_trienode(char data) {
     // Allocate memory for a TrieNode
-    TrieNode* node = (TrieNode*) calloc (1, sizeof(TrieNode));
+    struct TrieNode* node = (TrieNode*) calloc (1, sizeof(TrieNode));
     for (int i=0; i<26; i++)
         node->children[i] = NULL;
     node->is_leaf = 0;
@@ -54,7 +54,7 @@ TrieNode* make_trienode(char data) {
     return node;
 }
 
-void free_trienode(TrieNode* node) {
+void free_trienode(struct TrieNode* node) {
     // Free the trienode sequence
     for(int i=0; i<26; i++) {
         if (node->children[i] != NULL) {
@@ -68,12 +68,12 @@ void free_trienode(TrieNode* node) {
 }
 
 typedef char word[10];
-
 typedef struct TrieNode TrieNode;
 
-struct correction_buffer {
+struct CorrectionBuffer {
   word last_word;
   TrieNode nodes;
 };
 
-
+// inits buffer to be used in callbacks
+static struct CorrectionBuffer buffer;
