@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
+static int WORD_SIZE = 15;
+
 int get_dict_size(char *filename) {
     FILE *fp;
     int count = 0;
@@ -9,28 +11,35 @@ int get_dict_size(char *filename) {
     fp = fopen(filename, "r");
     while ((c = fgetc(fp)) != EOF) {
         if (c == '\n') {
-            count = count + 1;
+            ++count;
         }
     }
     fclose(fp);
     return count;
 }
 
-void get_dict(char *filename, char words[], int count) {
-    FILE *fp;
-    fp = fopen(filename, "r");
-    char str;
-    // Read lines from file into array
+char **get_dict(char *filename, const int count) {
+    const int max_string_len = 35; // WARNING: 35 is the max length string
+    FILE *fp = fopen(filename, "r");
+
+    // get the file size to alloc
+    fseek(fp, 0, SEEK_END);
+    int size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    char **dict = malloc(sizeof(int *) * count);
     int loop_counter = 0;
-    while (fscanf(fp, "%c\n", &str) != EOF) {
-        printf("%c\n", str);
-        fflush(stdout);
-        words[loop_counter] = str;
-        printf("done\n");
-        fflush(stdout);
-        loop_counter++;
+    char currentline[max_string_len];
+    while (fgets(currentline, sizeof(currentline), fp) != NULL) {
+        currentline[strlen(currentline) - 1] = '\0';
+        char *string = malloc(sizeof(currentline));
+        strcpy(string, currentline);
+        dict[loop_counter] = string;
+        ++loop_counter;
     }
     fclose(fp);
+
+    return dict;
 }
 
 #define N 26 // 26 letters - english
@@ -135,9 +144,11 @@ static struct CorrectionBuffer buffer;
 int main() {
     char *dict_name = "words.txt";
     int dict_size = get_dict_size(dict_name);
-    char dict[dict_size];
     printf("%i\n", dict_size);
-    get_dict(dict_name, dict, dict_size);
+    char **dict = get_dict(dict_name, dict_size);
+    for (int i = 0; i < dict_size; ++i) {
+        printf("%s\n", dict[i]);
+    }
 
     // buffer.nodes = *make_trienode('\0');
     // TrieNode *root = &buffer.nodes;
