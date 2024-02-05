@@ -1,14 +1,27 @@
+/*
+ * Steps:
+ * - Every english word
+ * - Search list and replace if close to 80% match - or num set in Kconfig
+ * - Replace if last charecter is space or puctuation
+ * - For faster lookup in large dict create map with addesses of each first char a,b,c...
+ * - create trie and store on flash to avoid creation on startup - during compile time
+ * - dict will not include names
+ * - to cancel a correction remove the space or puctutation and it will automatically replace the
+ * previous word
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-static int WORD_SIZE = 15;
+#define DICT_NAME "words.txt"
+#define DICT_SIZE ((int)get_dict_size())
 
-int get_dict_size(char *filename) {
+int get_dict_size() {
     FILE *fp;
     int count = 0;
     char c;
-    fp = fopen(filename, "r");
+    fp = fopen(DICT_NAME, "r");
     while ((c = fgetc(fp)) != EOF) {
         if (c == '\n') {
             ++count;
@@ -18,16 +31,18 @@ int get_dict_size(char *filename) {
     return count;
 }
 
-char **get_dict(char *filename, const int count) {
+#define WORD_LIST ((char **)get_dict())
+
+char **get_dict() {
     const int max_string_len = 35; // WARNING: 35 is the max length string
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(DICT_NAME, "r");
 
     // get the file size to alloc
     fseek(fp, 0, SEEK_END);
     int size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    char **dict = malloc(sizeof(int *) * count);
+    char **dict = malloc(sizeof(int *) * DICT_SIZE);
     int loop_counter = 0;
     char currentline[max_string_len];
     while (fgets(currentline, sizeof(currentline), fp) != NULL) {
@@ -111,17 +126,6 @@ int search_trie(struct TrieNode *root, char *word) {
     return 0;
 }
 
-void print_trie(struct TrieNode *root) {
-    // Prints the nodes of the trie
-    if (!root)
-        return;
-    struct TrieNode *temp = root;
-    printf("%c -> ", temp->data);
-    for (int i = 0; i < N; i++) {
-        print_trie(temp->children[i]);
-    }
-}
-
 void print_search(struct TrieNode *root, char *word) {
     printf("Searching for %s: ", word);
     if (search_trie(root, word) == 0)
@@ -130,39 +134,45 @@ void print_search(struct TrieNode *root, char *word) {
         printf("Found!\n");
 }
 
-typedef char word[10];
-typedef struct TrieNode TrieNode;
+#define DICT_TIRE (build_trie())
+
+struct TrieNode *build_trie() {
+    struct TrieNode *root = make_trienode('\0');
+    for (int i = 0; i < DICT_SIZE; ++i) {
+        root = insert_trie(root, WORD_LIST[i]);
+    }
+    return root;
+};
+
+typedef char word[15];
+
+struct LetterTable {
+    char letter;
+    int location;
+};
 
 struct CorrectionBuffer {
-    word last_word;
-    TrieNode nodes;
+    word last_word;                   // used if user reverts correction
+    const struct TrieNode *root_node; // stores dict trie
+    struct LetterTable list[N];       // list of top level letter locations
+    char **frequent_words[25];        // 25 words will be cached for fast search of mispelled words
+    // TODO: maybe have struct which ranks each word in trie tree and rank by usage ^^^^^
 };
 
 // inits buffer to be used in callbacks
-static struct CorrectionBuffer buffer;
+struct CorrectionBuffer buffer = {
+    .last_word = "",
+    .list = {},
+    .frequent_words = {},
+};
 
 int main() {
-    char *dict_name = "words.txt";
-    int dict_size = get_dict_size(dict_name);
-    printf("%i\n", dict_size);
-    char **dict = get_dict(dict_name, dict_size);
-    for (int i = 0; i < dict_size; ++i) {
-        printf("%s\n", dict[i]);
+    for (int i = 0; i < DICT_SIZE; ++i) {
+        printf("%s", WORD_LIST[i]);
     }
 
-    // buffer.nodes = *make_trienode('\0');
-    // TrieNode *root = &buffer.nodes;
-    // root = insert_trie(root, "hello");
-    // root = insert_trie(root, "hi");
-    // root = insert_trie(root, "teabag");
-    // root = insert_trie(root, "teacan");
-    // print_search(root, "tea");
-    // print_search(root, "teabag");
-    // print_search(root, "teacan");
-    // print_search(root, "hi");
-    // print_search(root, "hey");
-    // print_search(root, "hello");
-    // print_trie(root);
-    // free_trienode(&buffer.nodes);
+    struct TrieNode *root = DICT_TIRE;
+    print_search(root, "peer");
+
     return 0;
 }
