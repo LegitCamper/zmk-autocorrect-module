@@ -70,7 +70,10 @@ struct CorrectionBuffer buffer = {
 };
 
 int main() {
-    // print_search(root, "peer");
+    print_search(&root, "car");
+    for (long unsigned int i = 0; i < sizeof(root.children); ++i) {
+        printf("%i", root.children[i]->data);
+    }
 
     return 0;
 }
