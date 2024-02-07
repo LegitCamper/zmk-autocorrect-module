@@ -631,7 +631,6 @@ minimal
 minimize
 mining
 ministry
-minute2
 miracle
 miserable
 misery
@@ -784,7 +783,6 @@ peasant
 peculiar
 peer
 penalty
-pension1
 perceive
 perception
 permanently
@@ -945,7 +943,6 @@ recipient
 reckon
 recognition
 reconstruction
-recount1
 recovery
 recruit
 recruitment
@@ -1192,7 +1189,6 @@ strictly
 striking
 strip
 strip
-v.
 strive
 stroke
 structural
