@@ -36,14 +36,12 @@ def add_to_lines(new_word, new_name, new_data, new_children, new_leaf):
 
 def format_array(children, leaf):
     if leaf == 0:
-        children_array = ["0"] * N
+        children_array = []
         for k, v in children.items():
-            children_array[string.ascii_lowercase.index(k)] = "&" + v
-        children_array = (
-            str(children_array).replace("'", "").replace("[", "{").replace("]", "}")
-        )
+            children_array.append(f"[{string.ascii_lowercase.index(k)}] = {'&' + v}")
+        children_array = f"{{{', '.join(children_array)}}}".replace("'", "")
     else:
-        children_array = {}
+        children_array = "{}"
 
     return children_array
 
