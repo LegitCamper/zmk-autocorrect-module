@@ -5,7 +5,10 @@ import string
 sys.setrecursionlimit(100)
 
 N = 26  # 26 lowercase english letters
-TrieNodeInit = f"""#define N {N} // 26 lowercase english letters
+TrieNodeInit = f"""// This file is generated from trie_dict_gen.py to create 
+// the trie during compile time and save space
+
+#define N {N} // 26 lowercase english letters
 
 struct TrieNode {{
     char data;
@@ -13,8 +16,9 @@ struct TrieNode {{
     int is_leaf;
 }};    
 
-#define S(NAME, ...) struct TrieNode NAME = __VA_ARGS__
+#define S(NAME, ...) static struct TrieNode NAME = __VA_ARGS__
 
+// trie_node structs -- aliased for smaller file size
 """
 
 lines_to_write = []
@@ -23,46 +27,51 @@ lines_to_write = []
 def add_to_lines(new_word, new_name, new_data, new_children, new_leaf):
     for word, name, data, children, leaf in lines_to_write:
         if name == new_name:
+            # already in list so merge children
             children.update(new_children)
             return
+    # not already in list
     lines_to_write.append([new_word, new_name, new_data, new_children, new_leaf])
 
 
+def format_array(children, leaf):
+    if leaf == 0:
+        children_array = ["0"] * N
+        for k, v in children.items():
+            children_array[string.ascii_lowercase.index(k)] = "&" + v
+        children_array = (
+            str(children_array).replace("'", "").replace("[", "{").replace("]", "}")
+        )
+    else:
+        children_array = {}
+
+    return children_array
+
+
 def format_struct(word, name, data, children, leaf):
-    children_array = ["0"] * N
-    for k, v in children.items():
-        children_array[string.ascii_lowercase.index(k)] = "&" + v
-    children_array = (
-        str(children_array).replace("'", "").replace("[", "{").replace("]", "}")
-    )
+    children_array = format_array(children, leaf)
     line = f"S({name}, {{ .data = '{data}', .children = {children_array}, .is_leaf = {leaf} }}); \n"
     return line
 
 
-def add_children(loc, cloc, children, char, func_name):
-    if cloc > loc:
-        children.update({char: func_name})
-
-
-def add_char_to_trie(fword, word, loc, children):
-    leaf = False
-    if len(word) > 1:
-        char = word[0]
-        word = word[1:]
-        (uchar, ufunc_name) = add_char_to_trie(fword, word, loc + 1, children)
-        add_children(loc, loc + 1, children, uchar, ufunc_name)
-
+def add_char_to_trie(fword, word, loc):
+    if len(word) == 0:
+        func_name = f"{fword[:loc]}_leaf"
+        previous_char = fword[len(fword) - 1]
+        add_to_lines(fword, func_name, previous_char, {}, 1)
+        return (previous_char, func_name)
     else:
-        leaf = True
+        children = {}
         char = word[0]
         word = word[1:]
 
-    if leaf:
-        add_to_lines(fword, f"trie_node_l{loc + 1}_{fword}_leaf", char, {}, 1)
-    func_name = f"trie_node_l{loc}_{fword}"
-    add_to_lines(fword, func_name, char, children, 0)
+        (uchar, ufunc_name) = add_char_to_trie(fword, word, loc + 1)
+        children.update({uchar: ufunc_name})
 
-    return (char, func_name)
+        func_name = f"{fword[:loc]}"
+        add_to_lines(fword, func_name, char, children, 0)
+
+        return (char, func_name)
 
 
 def main():
@@ -70,7 +79,7 @@ def main():
         dict_words = [line.strip() for line in file]
 
     for word in dict_words:
-        add_char_to_trie(word, word, loc=1, children={})
+        add_char_to_trie(word, word, loc=1)
 
     header_file = "trie_dict.h"
     if os.path.exists(header_file):
@@ -79,13 +88,16 @@ def main():
         file.write(TrieNodeInit)
 
         root_children = {}
+        lines_to_write.sort(key=lambda x: len(x[1]), reverse=True)
         for word, name, data, children, leaf in lines_to_write:
-            if "l0" in name:
+            if len(name) == 1:
                 root_children.update({data: name})
             file.write(format_struct(word, name, data, children, leaf))
 
         # make root
-        file.write(format_struct("", "root", "", root_children, 0))
+        file.write(
+            f"struct TrieNode root = {{ .children = {format_array(root_children, 0)}, .is_leaf = 0 }};"
+        )
 
 
 main()
